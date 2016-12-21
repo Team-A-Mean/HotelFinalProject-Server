@@ -11,8 +11,9 @@ var Admins = require('./model_admin');
 //errores del tipo: No 'Access-Control-Allow-Origin' , en la app cliente con angular.
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+
     next();
 });
 //************************************************************
@@ -68,9 +69,24 @@ routerRest.route("/rooms/:id")
         });
     });
 
-
 //TODO get fecha incicio, fecha fin habitaciones libres (usuario,admin)
+routerRest.route("/rooms/:fechaEntrada")
+    .get((request, response) => {
 
+
+
+
+
+        let fechainicio = request.params.fechaEntrada;
+        console.log(fechainicio);
+        //console.log("time:" + fechainicio.getMilliseconds())
+
+        let fechafin = request.params.fechaSalida;
+        Rooms.find({ "reservas.fechaEntrada": fechainicio, "reservas.fechaSalida": fechafin }, (error, room) => {
+            console.log(room);
+        })
+
+    })
 //TODO get habitaciones ocupadas por fecha de entrada(admin)
 
 //TODO put modificar precio. findandupdate(admin) Posibilidad de visualizar los precios previamente
