@@ -39,8 +39,7 @@ routerRest.route("/admin")
         })
     });
 
-
-//Update de reservas
+//Crear una nueva reserva en una habitacion.
 routerRest.route("/rooms/:id")
     .put((request, response) => {
         let roomNumber = request.params.id;
@@ -72,53 +71,91 @@ routerRest.route("/rooms/fechas/")
     .get((request, response) => {
 
 
+
         //let fechainicio = request.params.fechaEntrada;
         let fechainicio = "2015/11/04"
         let fechafin = "2019/12/25"
         console.log(fechainicio);
         //console.log("time:" + fechainicio.getMilliseconds())
-
         //let fechafin = request.params.fechaSalida;
         fechainicio = new Date(fechainicio)
         fechafin = new Date(fechafin)
-
-
         /*
                 Rooms.find({ "reservas.fechaEntrada": fechainicio, "reservas.fechaSalida": fechafin }, (error, room) => {
                     console.log(room);
                 })
                 */
-
-
         //   Rooms.find({
         //       "reservas":{$elemMatch: {fechaEntrada:{$gte:fechainicio}}}} ,
         //          (error, room) => {
         //          console.log(room);}
         // )
-
-
         // db.rooms.find({ "reservas": { $elemMatch: { fechaEntrada: { $gte: new Date("2015/12/12") }, fechaSalida: { $lte: new Date("2019/12/12") } } } })
         //, fechaSalida: { $lte: new Date("2018/12/12") }
+        /*Rooms.find((error, rooms) => {
+            response.json(rooms);
+        })*/
+
+
+        //User.findOne({ 'local.rooms': { $elemMatch: { name: req.body.username } } }, function(err, user) { });
+
 
         Rooms.find({
-            "reservas": { "$and": [{ "reservas.fechaEntrada": { "$gte": new Date("2017/12/12") } }, { "reservas.fechaSalida": { "$lte": new Date("2019/12/12") } }] }, function(err, docs) {
-
+            "reservas": {
+                $elemMatch: { "email": "mi@correo" }
             }
-        });
+
+        }
+
+
+
+            , function(err, docs) {
+                response.json(docs);
+            }
+        );
+
+
+
+        /*   Rooms.find({
+               "reservas": {
+                   "$and":
+                   [
+                       { "reservas.fechaEntrada": { "$gte": new Date("2017/12/12") } },
+                       { "reservas.fechaSalida": { "$lte": new Date("2019/12/12") } }
+                   ]
+               }, function(err, docs) {
+                   response.json(docs);
+               }
+           });*/
     });
-
-
-
-
 
 //TODO get habitaciones ocupadas por fecha de entrada(admin)
 
-//TODO put modificar precio. findandupdate(admin) Posibilidad de visualizar los precios previamente
+//put modificar precio.
+routerRest.route("/rooms/cambiarprecios/cambia/")
+    .put((request, response) => {
+        //{ "reservas.email": request.params.email }
 
-//TODO put ingresar una nueva reserva
+        let precio = parseInt(request.body.precio);
+        let tipo = request.body.tipo;
+        let categoria = request.body.categoria;
 
-//TODO put cancelar una reserva
+        console.log("Precio: ", request.body.precio);
 
+        Rooms.update({ "tipo": tipo, "categoria": categoria }, { "precio": precio }, { multi: true }, (error, room) => {
+            if (error) {
+                response.status(500).send('Update , Error al actualizar el precio de la room')
+                console.log('Update , Error al actualizar le precio la room', error)
+            } else {
+                response.json(room)
+                console.log('precio room actualizada OK: ');
+            }
+
+        });
+
+    })
+
+//put cancelar una reserva, por habitacion y email.
 routerRest.route("/rooms/cancel/cancelar/")
     .put((request, response) => {
         //{ "reservas.email": request.params.email }
@@ -145,41 +182,30 @@ routerRest.route("/rooms/cancel/cancelar/")
 
     })
 
-routerRest.route("/coches/:alias")
+
+
+
+
+//get find reserva por email cliente
+//TODO no devolver las reservas donde no coincide el email
+routerRest.route("/admin/buscareserva/:email")
     .get((request, response) => {
-        // TODO: obtener el coche a partir de su idCoche
-        response.json({ _id: 1, marca: "opel", modelo: "corsa" })
-    })
-    .delete((request, response) => {
-        response.json({ message: "borrado" });
-    })
-    .put((request, response) => {
-        //TODO: Obtener el id y del body obtener marca y modelo
-        response.json({ message: "actualizado" });
+
+
+        let email = request.params.email;
+
+        Rooms.find({ "reservas.email": email }, (error, rooms) => {
+            response.json(rooms);
+        })
     });
+
+
+
+
+
+
 app.use("/", routerRest);
 
-
-
-/*
-function getHabitaciones() {
-    return Habitacion.find();
-}
-
-function nuevaHabitacion() {
-    return Habitacion.save((error) => {
-        console.error("Error", error);
-    });
-}
-
-*/
-
-/*
-function cargaInicial() {
-    Habitacion.create(this.habitaciones);
-}
-cargaInicial();
-*/
 
 function loadInitialData() {
     for (var i = 0; i < this.habitaciones.length; i++) {
