@@ -8,6 +8,9 @@ var esquemaHabitacion = new Schema({
     "tipo": String,
     "categoria": String,
     "precio": Number,
+    "reservas": []
+
+    /*
     "reservas": [
         {
             "idReserva": Number,
@@ -17,6 +20,7 @@ var esquemaHabitacion = new Schema({
             "nombre": String
         }
     ]
+    */
 });
 
 module.exports = mongoose.model("Rooms", esquemaHabitacion);

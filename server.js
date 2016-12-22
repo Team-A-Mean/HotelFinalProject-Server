@@ -9,7 +9,7 @@ var Admins = require('./model_admin');
 
 //Este use es necesario para activar CORS y evitar
 //errores del tipo: No 'Access-Control-Allow-Origin' , en la app cliente con angular.
-app.use(function (req, res, next) {
+app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -39,6 +39,8 @@ routerRest.route("/admin")
         })
     });
 
+
+//Update de reservas
 routerRest.route("/rooms/:id")
     .put((request, response) => {
         let roomNumber = request.params.id;
@@ -48,45 +50,67 @@ routerRest.route("/rooms/:id")
         reservaDoc.fechaEntrada = new Date(reservaDoc.fechaEntrada);
         reservaDoc.fechaSalida = new Date(reservaDoc.fechaSalida);
         console.log(reservaDoc);
-        Rooms.find({ "numeroHabitacion": roomNumber }, (error, room) => {
-            roomEncontrada = room[0];
-            //roomEncontrada.reservas = reservaDoc;
-            //roomEncontrada.tipo = "el trweter";
-            roomEncontrada.reservas.push(reservaDoc);
-            roomEncontrada.save((error, room) => {
-                if (error) {
-                    response.status(500).send('Update , Error al actualizar la room')
-                    //console.log('%s %s is a %s.', person.name.first, person.name.last, person.occupation)
-                    console.log('Update , Error al actualizar la room', error)
-                } else {
-                    //Devuelve el  doc actualizado, incluyendo el _id
+        //Rooms.find({ "numeroHabitacion": roomNumber }, (error, room) => {
+        Rooms.update({ "numeroHabitacion": roomNumber }, { $push: { reservas: reservaDoc } }, (error, room) => {
+            //******************************
+            if (error) {
+                response.status(500).send('Update , Error al actualizar la room')
+                //console.log('%s %s is a %s.', person.name.first, person.name.last, person.occupation)
+                console.log('Update , Error al actualizar la room', error)
+            } else {
+                //Devuelve el  doc actualizado, incluyendo el _id
 
-                    response.json(room)
-                    console.log('room actualizada OK: ');
-                }
-            });//Fin de peli.save
-            response.json(room);
+                response.json(room)
+                console.log('room actualizada OK: ');
+            }
+
         });
     });
 
 //TODO get fecha incicio, fecha fin habitaciones libres (usuario,admin)
-routerRest.route("/rooms/:fechaEntrada")
+routerRest.route("/rooms/fechas/")
     .get((request, response) => {
 
 
-
-
-
-        let fechainicio = request.params.fechaEntrada;
+        //let fechainicio = request.params.fechaEntrada;
+        let fechainicio = "2015/11/04"
+        let fechafin = "2019/12/25"
         console.log(fechainicio);
         //console.log("time:" + fechainicio.getMilliseconds())
 
-        let fechafin = request.params.fechaSalida;
-        Rooms.find({ "reservas.fechaEntrada": fechainicio, "reservas.fechaSalida": fechafin }, (error, room) => {
-            console.log(room);
-        })
+        //let fechafin = request.params.fechaSalida;
+        fechainicio = new Date(fechainicio)
+        fechafin = new Date(fechafin)
 
-    })
+
+        /*
+                Rooms.find({ "reservas.fechaEntrada": fechainicio, "reservas.fechaSalida": fechafin }, (error, room) => {
+                    console.log(room);
+                })
+                */
+
+
+        //   Rooms.find({
+        //       "reservas":{$elemMatch: {fechaEntrada:{$gte:fechainicio}}}} ,
+        //          (error, room) => {
+        //          console.log(room);}
+        // )
+
+
+        // db.rooms.find({ "reservas": { $elemMatch: { fechaEntrada: { $gte: new Date("2015/12/12") }, fechaSalida: { $lte: new Date("2019/12/12") } } } })
+        //, fechaSalida: { $lte: new Date("2018/12/12") }
+
+        Rooms.find({
+            "reservas": { "$and": [{ "reservas.fechaEntrada": { "$gte": new Date("2017/12/12") } }, { "reservas.fechaSalida": { "$lte": new Date("2019/12/12") } }] }, function(err, docs) {
+
+            }
+        });
+    });
+
+
+
+
+
 //TODO get habitaciones ocupadas por fecha de entrada(admin)
 
 //TODO put modificar precio. findandupdate(admin) Posibilidad de visualizar los precios previamente
@@ -94,6 +118,32 @@ routerRest.route("/rooms/:fechaEntrada")
 //TODO put ingresar una nueva reserva
 
 //TODO put cancelar una reserva
+
+routerRest.route("/rooms/cancel/cancelar/")
+    .put((request, response) => {
+        //{ "reservas.email": request.params.email }
+
+        let email = request.body.email;
+        let numeroHabitacion = parseInt(request.body.numeroHabitacion);
+
+        console.log("soy el 1", request.params.body);
+
+        Rooms.update({ "numeroHabitacion": numeroHabitacion }, { $pull: { "reservas": { "email": email } } }, (error, room) => {
+            //******************************
+            if (error) {
+                response.status(500).send('Update , Error al actualizar la room')
+                //console.log('%s %s is a %s.', person.name.first, person.name.last, person.occupation)
+                console.log('Update , Error al actualizar la room', error)
+            } else {
+                //Devuelve el  doc actualizado, incluyendo el _id
+
+                response.json(room)
+                console.log('room actualizada OK: ');
+            }
+
+        });
+
+    })
 
 routerRest.route("/coches/:alias")
     .get((request, response) => {
@@ -195,7 +245,7 @@ habitaciones = [
 
 ]
 
-loadInitialData();
+//loadInitialData();
 
 administradores = [
     {
@@ -206,4 +256,4 @@ administradores = [
         "apellido": "DelCurso"
     }
 ]
-loadInitialAdmin();
+//loadInitialAdmin();
