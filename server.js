@@ -9,8 +9,8 @@ var Admins = require('./model_admin');
 
 //Este use es necesario para activar CORS y evitar
 //errores del tipo: No 'Access-Control-Allow-Origin' , en la app cliente con angular.
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*.*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
 
@@ -46,8 +46,9 @@ routerRest.route("/rooms/:id")
         let reservaDoc = request.body;
 
         // TODO: ver la forma de pasar fecha entrada y salida.
-        reservaDoc.fechaEntrada = new Date(reservaDoc.fechaEntrada);
-        reservaDoc.fechaSalida = new Date(reservaDoc.fechaSalida);
+        console.log(reservaDoc);
+        reservaDoc.fechaEntrada = Date.parse(reservaDoc.fechaEntrada);
+        reservaDoc.fechaSalida = Date.parse(reservaDoc.fechaSalida);
         console.log(reservaDoc);
         //Rooms.find({ "numeroHabitacion": roomNumber }, (error, room) => {
         Rooms.update({ "numeroHabitacion": roomNumber }, { $push: { reservas: reservaDoc } }, (error, room) => {
@@ -67,55 +68,33 @@ routerRest.route("/rooms/:id")
     });
 
 //TODO get fecha incicio, fecha fin habitaciones libres (usuario,admin)
-routerRest.route("/rooms/fechas/")
-    .get((request, response) => {
+routerRest.route("/rooms/fechas/xxx")
+    .put((request, response) => {
+
+        let searchDoc = request.body;
 
 
-
-        //let fechainicio = request.params.fechaEntrada;
-        let fechainicio = "2015/11/04"
-        let fechafin = "2019/12/25"
-        console.log(fechainicio);
-        //console.log("time:" + fechainicio.getMilliseconds())
-        //let fechafin = request.params.fechaSalida;
-        fechainicio = new Date(fechainicio)
-        fechafin = new Date(fechafin)
-        /*
-                Rooms.find({ "reservas.fechaEntrada": fechainicio, "reservas.fechaSalida": fechafin }, (error, room) => {
-                    console.log(room);
-                })
-                */
-        //   Rooms.find({
-        //       "reservas":{$elemMatch: {fechaEntrada:{$gte:fechainicio}}}} ,
-        //          (error, room) => {
-        //          console.log(room);}
-        // )
-        // db.rooms.find({ "reservas": { $elemMatch: { fechaEntrada: { $gte: new Date("2015/12/12") }, fechaSalida: { $lte: new Date("2019/12/12") } } } })
-        //, fechaSalida: { $lte: new Date("2018/12/12") }
-        /*Rooms.find((error, rooms) => {
-            response.json(rooms);
-        })*/
-
-
-        //User.findOne({ 'local.rooms': { $elemMatch: { name: req.body.username } } }, function(err, user) { });
-
+        //fechainicio = "2015/11/04"
+        //let fechafin = "2019/12/25"
+        //console.log(fechainicio);
+        fechainicio = Date.parse(searchDoc.fechainicio);
+        fechafin = Date.parse(searchDoc.fechafin);
 
         Rooms.find({
             "reservas": {
-                $elemMatch: { "email": "mi@correo" }
+                $elemMatch: {fechaEntrada: { $gte: fechainicio }, fechaSalida:{ $lte: fechafin }}
+            }
+        },(error,doc)=>{
+            if (error){
+                console.error(error);
+            } else {
+             response.json(doc);
+             console.log("Resultado de la busqueda correcto")
             }
 
-        }
+        });
 
-
-
-            , function(err, docs) {
-                response.json(docs);
-            }
-        );
-
-
-
+    });
         /*   Rooms.find({
                "reservas": {
                    "$and":
@@ -127,7 +106,7 @@ routerRest.route("/rooms/fechas/")
                    response.json(docs);
                }
            });*/
-    });
+
 
 //TODO get habitaciones ocupadas por fecha de entrada(admin)
 
